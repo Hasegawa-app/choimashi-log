@@ -150,7 +150,7 @@ export default function Home() {
           </h1>
 
           <p className="text-sm leading-6 text-stone-600">
-            良かったことじゃなくて、「最悪ではなかったこと」を残す。
+            小さな記録をするアプリ。。
           </p>
 
           <p className="text-sm text-stone-500">今日：{today}</p>
