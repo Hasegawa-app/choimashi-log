@@ -27,6 +27,42 @@ const CHECK_ITEMS = [
   "何もないけど記録した",
 ];
 
+function moodStyle(mood: Mood) {
+  switch (mood) {
+    case "しんどい":
+      return {
+        selected: "bg-red-500 text-white border-red-500",
+        label: "bg-red-100 text-red-700 border-red-200",
+      };
+    case "普通":
+      return {
+        selected: "bg-sky-500 text-white border-sky-500",
+        label: "bg-sky-100 text-sky-700 border-sky-200",
+      };
+    case "小マシ":
+      return {
+        selected: "bg-emerald-500 text-white border-emerald-500",
+        label: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      };
+  }
+}
+
+function checkItemStyle(item: string) {
+  if (["起きた", "飯を食った", "水を飲んだ", "風呂に入った"].includes(item)) {
+    return "bg-amber-100 text-amber-800 border-amber-200";
+  }
+
+  if (["仕事に行った", "帰ってきた", "人と最低限話した"].includes(item)) {
+    return "bg-blue-100 text-blue-800 border-blue-200";
+  }
+
+  if (["ミスに気づけた", "相談できた", "休めた"].includes(item)) {
+    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  }
+
+  return "bg-stone-100 text-stone-700 border-stone-200";
+}
+
 function todayString() {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -150,7 +186,7 @@ export default function Home() {
           </h1>
 
           <p className="text-sm leading-6 text-stone-600">
-            小さな記録をするアプリ。
+            良かったことじゃなくて、「最悪ではなかったこと」を残す。
           </p>
 
           <p className="text-sm text-stone-500">今日：{today}</p>
@@ -160,19 +196,21 @@ export default function Home() {
           <h2 className="text-lg font-semibold">今日の状態</h2>
 
           <div className="grid grid-cols-3 gap-2">
-            {(["しんどい", "普通", "小マシ"] as Mood[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMood(m)}
-                className={`rounded-2xl py-3 text-sm font-semibold border transition active:scale-[0.98] ${
-                  mood === m
-                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
-                    : "bg-orange-50 text-stone-700 border-orange-100"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+            {(["しんどい", "普通", "小マシ"] as Mood[]).map((m) => {
+              const style = moodStyle(m);
+
+              return (
+                <button
+                  key={m}
+                  onClick={() => setMood(m)}
+                  className={`rounded-2xl py-3 text-sm font-semibold border transition active:scale-[0.98] ${
+                    mood === m ? style.selected : style.label
+                  }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -234,25 +272,25 @@ export default function Home() {
           <h2 className="text-lg font-semibold">直近7件のまとめ</h2>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+            <div className={`rounded-2xl p-3 border ${moodStyle("しんどい").label}`}>
               <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["しんどい"]}
               </div>
-              <div className="text-xs text-stone-500">しんどい</div>
+              <div className="text-xs">しんどい</div>
             </div>
 
-            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+            <div className={`rounded-2xl p-3 border ${moodStyle("普通").label}`}>
               <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["普通"]}
               </div>
-              <div className="text-xs text-stone-500">普通</div>
+              <div className="text-xs">普通</div>
             </div>
 
-            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+            <div className={`rounded-2xl p-3 border ${moodStyle("小マシ").label}`}>
               <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["小マシ"]}
               </div>
-              <div className="text-xs text-stone-500">小マシ</div>
+              <div className="text-xs">小マシ</div>
             </div>
           </div>
 
@@ -262,9 +300,14 @@ export default function Home() {
             {weeklySummary.topChecks.length === 0 ? (
               <p className="text-sm text-stone-400">まだ記録がありません。</p>
             ) : (
-              <ul className="space-y-1 text-sm text-stone-700">
+              <ul className="space-y-2 text-sm">
                 {weeklySummary.topChecks.map(([item, count]) => (
-                  <li key={item}>
+                  <li
+                    key={item}
+                    className={`inline-flex mr-2 rounded-full px-3 py-1 border ${checkItemStyle(
+                      item
+                    )}`}
+                  >
                     {item}：{count}回
                   </li>
                 ))}
@@ -286,7 +329,11 @@ export default function Home() {
               >
                 <div className="flex justify-between items-center gap-3">
                   <h3 className="font-bold">{entry.date}</h3>
-                  <span className="shrink-0 text-sm rounded-full bg-orange-100 text-orange-800 px-3 py-1">
+                  <span
+                    className={`shrink-0 text-sm rounded-full px-3 py-1 border ${
+                      moodStyle(entry.mood).label
+                    }`}
+                  >
                     {entry.mood}
                   </span>
                 </div>
@@ -300,7 +347,9 @@ export default function Home() {
                     entry.checks.map((item) => (
                       <span
                         key={item}
-                        className="text-xs rounded-full bg-orange-100 text-orange-800 px-2 py-1"
+                        className={`text-xs rounded-full px-2 py-1 border ${checkItemStyle(
+                          item
+                        )}`}
                       >
                         {item}
                       </span>
