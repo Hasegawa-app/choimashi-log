@@ -58,6 +58,7 @@ export default function Home() {
   const [mood, setMood] = useState<Mood>("普通");
   const [checks, setChecks] = useState<string[]>([]);
   const [memo, setMemo] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
 
   useEffect(() => {
     const loaded = loadEntries();
@@ -124,26 +125,38 @@ export default function Home() {
 
     setEntries(updated);
     saveEntries(updated);
+
+    setSavedMessage("保存しました");
+    setTimeout(() => setSavedMessage(""), 1800);
   }
 
   function handleClearToday() {
     setMood("普通");
     setChecks([]);
     setMemo("");
+    setSavedMessage("");
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-4 py-6">
+    <main className="min-h-screen bg-orange-50 text-stone-900 px-4 py-6">
       <div className="mx-auto max-w-xl space-y-6">
         <header className="space-y-2">
-          <h1 className="text-3xl font-bold">今日の小マシログ</h1>
-          <p className="text-sm text-zinc-400">
+          <div className="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+            今日の記録
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight">
+            今日の小マシログ
+          </h1>
+
+          <p className="text-sm leading-6 text-stone-600">
             良かったことじゃなくて、「最悪ではなかったこと」を残す。
           </p>
-          <p className="text-sm text-zinc-500">今日：{today}</p>
+
+          <p className="text-sm text-stone-500">今日：{today}</p>
         </header>
 
-        <section className="rounded-2xl bg-zinc-900 p-4 space-y-4 border border-zinc-800">
+        <section className="rounded-3xl bg-white p-4 space-y-4 border border-orange-100 shadow-sm">
           <h2 className="text-lg font-semibold">今日の状態</h2>
 
           <div className="grid grid-cols-3 gap-2">
@@ -151,10 +164,10 @@ export default function Home() {
               <button
                 key={m}
                 onClick={() => setMood(m)}
-                className={`rounded-xl py-3 text-sm font-semibold border ${
+                className={`rounded-2xl py-3 text-sm font-semibold border transition active:scale-[0.98] ${
                   mood === m
-                    ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                    : "bg-zinc-800 text-zinc-200 border-zinc-700"
+                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                    : "bg-orange-50 text-stone-700 border-orange-100"
                 }`}
               >
                 {m}
@@ -163,18 +176,23 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="rounded-2xl bg-zinc-900 p-4 space-y-4 border border-zinc-800">
-          <h2 className="text-lg font-semibold">今日あった小マシ</h2>
+        <section className="rounded-3xl bg-white p-4 space-y-4 border border-orange-100 shadow-sm">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">今日あった小マシ</h2>
+            <p className="text-xs text-stone-500">
+              それっぽいものを押すだけ。何もなければ「何もないけど記録した」でOK。
+            </p>
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
             {CHECK_ITEMS.map((item) => (
               <button
                 key={item}
                 onClick={() => toggleCheck(item)}
-                className={`rounded-xl px-3 py-3 text-sm text-left border ${
+                className={`rounded-2xl px-3 py-3 text-sm text-left border transition active:scale-[0.98] ${
                   checks.includes(item)
-                    ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                    : "bg-zinc-800 text-zinc-200 border-zinc-700"
+                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                    : "bg-white text-stone-700 border-orange-100"
                 }`}
               >
                 {item}
@@ -186,47 +204,55 @@ export default function Home() {
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             placeholder="一言メモ。空欄でもOK。例：仕事と家の往復だけだった"
-            className="w-full min-h-28 rounded-xl bg-zinc-950 border border-zinc-700 p-3 text-sm outline-none focus:border-zinc-400"
+            className="w-full min-h-28 rounded-2xl bg-orange-50 border border-orange-200 p-3 text-sm outline-none focus:border-orange-400 placeholder:text-stone-400"
           />
         </section>
 
         <div className="flex gap-2">
           <button
             onClick={handleSave}
-            className="flex-1 rounded-xl bg-zinc-100 text-zinc-950 py-3 font-bold"
+            className="flex-1 rounded-2xl bg-orange-500 text-white py-3 font-bold shadow-sm transition active:scale-[0.98]"
           >
             保存
           </button>
 
           <button
             onClick={handleClearToday}
-            className="rounded-xl bg-zinc-800 text-zinc-200 px-4 py-3 font-bold border border-zinc-700"
+            className="rounded-2xl bg-white text-stone-700 px-4 py-3 font-bold border border-orange-200 transition active:scale-[0.98]"
           >
             クリア
           </button>
         </div>
 
-        <section className="rounded-2xl bg-zinc-900 p-4 space-y-4 border border-zinc-800">
+        {savedMessage && (
+          <p className="rounded-2xl bg-orange-100 px-4 py-3 text-sm font-semibold text-orange-700">
+            {savedMessage}
+          </p>
+        )}
+
+        <section className="rounded-3xl bg-white p-4 space-y-4 border border-orange-100 shadow-sm">
           <h2 className="text-lg font-semibold">直近7件のまとめ</h2>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-zinc-800 p-3">
-              <div className="text-xl font-bold">
+            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+              <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["しんどい"]}
               </div>
-              <div className="text-xs text-zinc-400">しんどい</div>
+              <div className="text-xs text-stone-500">しんどい</div>
             </div>
-            <div className="rounded-xl bg-zinc-800 p-3">
-              <div className="text-xl font-bold">
+
+            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+              <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["普通"]}
               </div>
-              <div className="text-xs text-zinc-400">普通</div>
+              <div className="text-xs text-stone-500">普通</div>
             </div>
-            <div className="rounded-xl bg-zinc-800 p-3">
-              <div className="text-xl font-bold">
+
+            <div className="rounded-2xl bg-orange-50 p-3 border border-orange-100">
+              <div className="text-2xl font-bold">
                 {weeklySummary.moodCount["小マシ"]}
               </div>
-              <div className="text-xs text-zinc-400">小マシ</div>
+              <div className="text-xs text-stone-500">小マシ</div>
             </div>
           </div>
 
@@ -234,9 +260,9 @@ export default function Home() {
             <h3 className="text-sm font-semibold mb-2">よく出た小マシ</h3>
 
             {weeklySummary.topChecks.length === 0 ? (
-              <p className="text-sm text-zinc-500">まだ記録がありません。</p>
+              <p className="text-sm text-stone-400">まだ記録がありません。</p>
             ) : (
-              <ul className="space-y-1 text-sm text-zinc-300">
+              <ul className="space-y-1 text-sm text-stone-700">
                 {weeklySummary.topChecks.map(([item, count]) => (
                   <li key={item}>
                     {item}：{count}回
@@ -251,30 +277,30 @@ export default function Home() {
           <h2 className="text-lg font-semibold">記録一覧</h2>
 
           {recentEntries.length === 0 ? (
-            <p className="text-sm text-zinc-500">まだ記録がありません。</p>
+            <p className="text-sm text-stone-400">まだ記録がありません。</p>
           ) : (
             recentEntries.map((entry) => (
               <article
                 key={entry.date}
-                className="rounded-2xl bg-zinc-900 p-4 border border-zinc-800 space-y-2"
+                className="rounded-3xl bg-white p-4 border border-orange-100 shadow-sm space-y-3"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-3">
                   <h3 className="font-bold">{entry.date}</h3>
-                  <span className="text-sm rounded-full bg-zinc-800 px-3 py-1">
+                  <span className="shrink-0 text-sm rounded-full bg-orange-100 text-orange-800 px-3 py-1">
                     {entry.mood}
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   {entry.checks.length === 0 ? (
-                    <span className="text-sm text-zinc-500">
+                    <span className="text-sm text-stone-400">
                       小マシ項目なし
                     </span>
                   ) : (
                     entry.checks.map((item) => (
                       <span
                         key={item}
-                        className="text-xs rounded-full bg-zinc-800 px-2 py-1"
+                        className="text-xs rounded-full bg-orange-100 text-orange-800 px-2 py-1"
                       >
                         {item}
                       </span>
@@ -283,7 +309,7 @@ export default function Home() {
                 </div>
 
                 {entry.memo && (
-                  <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+                  <p className="text-sm leading-6 text-stone-700 whitespace-pre-wrap">
                     {entry.memo}
                   </p>
                 )}
