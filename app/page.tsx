@@ -57,12 +57,11 @@ function checkItemStyle(item: string) {
   }
 
   if (["ミスに気づけた", "相談できた", "休めた"].includes(item)) {
-    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    return "bg-violet-100 text-violet-800 border-violet-200";
   }
 
   return "bg-stone-100 text-stone-700 border-stone-200";
 }
-
 function todayString() {
   const d = new Date();
   const yyyy = d.getFullYear();
