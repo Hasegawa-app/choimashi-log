@@ -62,6 +62,7 @@ function checkItemStyle(item: string) {
 
   return "bg-stone-100 text-stone-700 border-stone-200";
 }
+
 function todayString() {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -94,6 +95,9 @@ export default function Home() {
   const [checks, setChecks] = useState<string[]>([]);
   const [memo, setMemo] = useState("");
   const [savedMessage, setSavedMessage] = useState("");
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+
+  const targetDate = editingDate ?? today;
 
   useEffect(() => {
     const loaded = loadEntries();
@@ -145,31 +149,58 @@ export default function Home() {
     );
   }
 
+  function resetForm() {
+    setMood("普通");
+    setChecks([]);
+    setMemo("");
+    setEditingDate(null);
+    setSavedMessage("");
+  }
+
   function handleSave() {
     const newEntry: Entry = {
-      date: today,
+      date: targetDate,
       mood,
       checks,
       memo,
     };
 
-    const withoutToday = entries.filter((e) => e.date !== today);
-    const updated = [...withoutToday, newEntry].sort((a, b) =>
+    const withoutTarget = entries.filter((e) => e.date !== targetDate);
+    const updated = [...withoutTarget, newEntry].sort((a, b) =>
       b.date.localeCompare(a.date)
     );
 
     setEntries(updated);
     saveEntries(updated);
 
-    setSavedMessage("保存しました");
+    setSavedMessage(editingDate ? "記録を修正しました" : "保存しました");
+    setEditingDate(null);
     setTimeout(() => setSavedMessage(""), 1800);
   }
 
-  function handleClearToday() {
-    setMood("普通");
-    setChecks([]);
-    setMemo("");
+  function handleEdit(entry: Entry) {
+    setEditingDate(entry.date);
+    setMood(entry.mood);
+    setChecks(entry.checks);
+    setMemo(entry.memo);
     setSavedMessage("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleDelete(date: string) {
+    const ok = window.confirm(`${date} の記録を削除しますか？`);
+    if (!ok) return;
+
+    const updated = entries.filter((e) => e.date !== date);
+    setEntries(updated);
+    saveEntries(updated);
+
+    if (editingDate === date) {
+      resetForm();
+    }
+
+    setSavedMessage("記録を削除しました");
+    setTimeout(() => setSavedMessage(""), 1800);
   }
 
   return (
@@ -177,7 +208,7 @@ export default function Home() {
       <div className="mx-auto max-w-xl space-y-6">
         <header className="space-y-2">
           <div className="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-            今日の記録
+            {editingDate ? "記録を編集中" : "今日の記録"}
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight">
@@ -185,14 +216,16 @@ export default function Home() {
           </h1>
 
           <p className="text-sm leading-6 text-stone-600">
-            良かったことじゃなくて、「最悪ではなかったこと」を残す。
+            小さな進歩を残すアプリ。
           </p>
 
-          <p className="text-sm text-stone-500">今日：{today}</p>
+          <p className="text-sm text-stone-500">
+            {editingDate ? `編集中：${editingDate}` : `今日：${today}`}
+          </p>
         </header>
 
         <section className="rounded-3xl bg-white p-4 space-y-4 border border-orange-100 shadow-sm">
-          <h2 className="text-lg font-semibold">今日の状態</h2>
+          <h2 className="text-lg font-semibold">状態</h2>
 
           <div className="grid grid-cols-3 gap-2">
             {(["しんどい", "普通", "小マシ"] as Mood[]).map((m) => {
@@ -215,7 +248,7 @@ export default function Home() {
 
         <section className="rounded-3xl bg-white p-4 space-y-4 border border-orange-100 shadow-sm">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">今日あった小マシ</h2>
+            <h2 className="text-lg font-semibold">あった小マシ</h2>
             <p className="text-xs text-stone-500">
               それっぽいものを押すだけ。何もなければ「何もないけど記録した」でOK。
             </p>
@@ -250,14 +283,14 @@ export default function Home() {
             onClick={handleSave}
             className="flex-1 rounded-2xl bg-orange-500 text-white py-3 font-bold shadow-sm transition active:scale-[0.98]"
           >
-            保存
+            {editingDate ? "修正を保存" : "保存"}
           </button>
 
           <button
-            onClick={handleClearToday}
+            onClick={resetForm}
             className="rounded-2xl bg-white text-stone-700 px-4 py-3 font-bold border border-orange-200 transition active:scale-[0.98]"
           >
-            クリア
+            {editingDate ? "編集をやめる" : "クリア"}
           </button>
         </div>
 
@@ -299,18 +332,18 @@ export default function Home() {
             {weeklySummary.topChecks.length === 0 ? (
               <p className="text-sm text-stone-400">まだ記録がありません。</p>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <div className="flex flex-wrap gap-2">
                 {weeklySummary.topChecks.map(([item, count]) => (
-                  <li
+                  <span
                     key={item}
-                    className={`inline-flex mr-2 rounded-full px-3 py-1 border ${checkItemStyle(
+                    className={`rounded-full px-3 py-1 text-sm border ${checkItemStyle(
                       item
                     )}`}
                   >
                     {item}：{count}回
-                  </li>
+                  </span>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </section>
@@ -324,17 +357,38 @@ export default function Home() {
             recentEntries.map((entry) => (
               <article
                 key={entry.date}
-                className="rounded-3xl bg-white p-4 border border-orange-100 shadow-sm space-y-3"
+                className={`rounded-3xl bg-white p-4 border shadow-sm space-y-3 ${
+                  editingDate === entry.date
+                    ? "border-orange-400 ring-2 ring-orange-200"
+                    : "border-orange-100"
+                }`}
               >
                 <div className="flex justify-between items-center gap-3">
                   <h3 className="font-bold">{entry.date}</h3>
-                  <span
-                    className={`shrink-0 text-sm rounded-full px-3 py-1 border ${
-                      moodStyle(entry.mood).label
-                    }`}
-                  >
-                    {entry.mood}
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`shrink-0 text-sm rounded-full px-3 py-1 border ${
+                        moodStyle(entry.mood).label
+                      }`}
+                    >
+                      {entry.mood}
+                    </span>
+
+                    <button
+                      onClick={() => handleEdit(entry)}
+                      className="text-xs rounded-full bg-white text-stone-600 px-3 py-1 border border-stone-200"
+                    >
+                      編集
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(entry.date)}
+                      className="text-xs rounded-full bg-white text-red-600 px-3 py-1 border border-red-200"
+                    >
+                      削除
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
